@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MINES GAME</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0a0a;
+            color: white;
+            font-family: 'Arial', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+            overflow: hidden;
+        }
+        .screen {
+            display: none;
+            max-width: 380px;
+            width: 100%;
+            text-align: center;
+            animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .screen.active {
+            display: block;
+        }
+        .header {
+            color: #007AFF;
+            font-size: 32px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 12px rgba(0, 122, 255, 0.5);
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+        .subheader {
+            color: #00AAFF;
+            font-size: 22px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        .info-text {
+            color: #888;
+            font-size: 16px;
+            margin-bottom: 20px;
+            line-height: 1.4;
+            padding: 0 8px;
+        }
+        
+        /* Промокод */
+        .promo-container {
+            margin: 15px 0 20px 0;
+            padding: 15px;
+            background: #111;
+            border-radius: 12px;
+            border: 1px solid #222;
+        }
+        .promo-label {
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        .promo-code {
+            color: #00ff00;
+            font-size: 26px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            margin: 10px 0;
+            text-shadow: 0 0 12px rgba(0, 255, 0, 0.4);
+            font-family: monospace;
+            padding: 8px;
+            background: rgba(0, 255, 0, 0.05);
+            border-radius: 8px;
+            display: inline-block;
+            min-width: 150px;
+        }
+        .promo-note {
+            color: #888;
+            font-size: 12px;
+            margin-top: 8px;
+            line-height: 1.3;
+        }
+        
+        /* Кнопки */
+        .btn-primary {
+            background: linear-gradient(135deg, #007AFF, #0055CC);
+            color: white;
+            border: none;
+            padding: 18px;
+            font-size: 18px;
+            border-radius: 12px;
+            width: 100%;
+            margin: 15px 0 8px 0;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3);
+            text-decoration: none;
+            display: block;
+        }
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 122, 255, 0.4);
+        }
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .btn-secondary {
+            background: #222;
+            color: #aaa;
+            border: 1px solid #333;
+            padding: 15px;
+            font-size: 16px;
+            border-radius: 10px;
+            width: 100%;
+            margin: 5px 0;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-secondary:hover {
+            background: #333;
+            color: white;
+            transform: translateY(-1px);
+        }
+        
+        /* Регистрация */
+        .register-note {
+            color: #888;
+            font-size: 12px;
+            margin-top: 15px;
+            line-height: 1.3;
+        }
+        
+        /* Поле ввода */
+        .input-container {
+            margin: 20px 0;
+        }
+        .input-label {
+            color: #00AAFF;
+            font-size: 16px;
+            margin-bottom: 8px;
+            display: block;
+            text-align: left;
+        }
+        .input-field {
+            background: #111;
+            color: white;
+            border: 2px solid #007AFF;
+            border-radius: 10px;
+            padding: 16px;
+            font-size: 18px;
+            width: 100%;
+            text-align: center;
+            font-family: monospace;
+            letter-spacing: 1px;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: #00AAFF;
+            box-shadow: 0 0 12px rgba(0, 122, 255, 0.3);
+        }
+        .input-field::placeholder {
+            color: #444;
+        }
+        .error-text {
+            color: #ff5555;
+            font-size: 12px;
+            margin-top: 8px;
+            min-height: 16px;
+        }
+        .success-text {
+            color: #00ff00;
+            font-size: 12px;
+            margin-top: 8px;
+            min-height: 16px;
+        }
+        
+        /* Выбор платформы/языка */
+        .choice-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .choice-btn {
+            background: #1a1a1a;
+            color: white;
+            border: 2px solid #007AFF;
+            padding: 22px;
+            font-size: 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        .choice-btn:hover, .choice-btn.selected {
+            background: #007AFF;
+            box-shadow: 0 0 20px rgba(0, 122, 255, 0.4);
+            transform: translateY(-3px);
+        }
+        
+        /* Игровая сетка */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            margin: 15px 0;
+            padding: 12px;
+            background: #111;
+            border-radius: 12px;
+            border: 1px solid #222;
+            min-height: 220px;
+        }
+        .cell {
+            aspect-ratio: 1;
+            background: #222;
+            border: 2px solid #333;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            transition: all 0.5s ease;
+            opacity: 1;
+        }
+        .cell.safe {
+            background: #007AFF;
+            border-color: #00AAFF;
+            color: white;
+            transform: scale(1);
+            box-shadow: 0 0 12px rgba(0, 122, 255, 0.5);
+            animation: starPop 0.5s ease;
+        }
+        @keyframes starPop {
+            0% { transform: scale(0.5); opacity: 0; }
+            70% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        /* Выбор мин */
+        .mines-selector {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            margin: 15px 0;
+        }
+        .arrow-btn {
+            background: #007AFF;
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        .arrow-btn:hover {
+            background: #0055CC;
+            transform: scale(1.05);
+        }
+        .mines-display {
+            font-size: 50px;
+            color: #00AAFF;
+            font-weight: bold;
+            min-width: 70px;
+            text-shadow: 0 0 15px rgba(0, 170, 255, 0.3);
+        }
+        
+        /* Информация */
+        .mines-info {
+            color: #007AFF;
+            font-size: 18px;
+            margin: 15px 0;
+            font-weight: bold;
+        }
+        
+        /* Сообщение об ошибке регистрации */
+        .registration-error {
+            color: #ff5555;
+            background: rgba(255, 85, 85, 0.1);
+            border: 1px solid #ff5555;
+            border-radius: 10px;
+            padding: 12px;
+            margin: 15px 0;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+    <!-- ЭКРАН 1: Регистрация -->
+    <div id="screen-register" class="screen active">
+        <div class="header">MINES GAME</div>
+        <div class="info-text" id="register-text">
+            Чтобы начать играть, нужно зарегистрироваться
+        </div>
+        
+        <div class="promo-container">
+            <div class="promo-label" id="promo-label">
+                При регистрации введите промокод:
+            </div>
+            <div class="promo-code" id="promo-code">
+                2RTYD
+            </div>
+            <div class="promo-note" id="promo-note">
+                Он даст +500% к первому депозиту
+            </div>
+        </div>
+        
+        <a href="https://vv-one497.com/?open=register&p=k3ss" 
+           target="_blank" 
+           class="btn-primary" 
+           id="register-btn"
+           onclick="markUserRegistered()">
+            ЗАРЕГИСТРИРОВАТЬСЯ
+        </a>
+        
+        <div class="register-note" id="register-note">
+            После регистрации вернитесь сюда и введите ваш ID
+        </div>
+        
+        <!-- Кнопка показывается ТОЛЬКО для твоего ID -->
+        <button class="btn-secondary" id="have-id-btn" onclick="nextScreen('id-input')" style="display: none;">
+            У МЕНЯ УЖЕ ЕСТЬ ID
+        </button>
+    </div>
+
+    <!-- ЭКРАН 2: Ввод ID -->
+    <div id="screen-id-input" class="screen">
+        <div class="header">MINES GAME</div>
+        <div class="info-text" id="id-text">
+            Введите ID вашего аккаунта
+        </div>
+        
+        <div class="input-container">
+            <input type="tel" 
+                   class="input-field" 
+                   id="user-id-input" 
+                   placeholder="" 
+                   maxlength="9"
+                   inputmode="numeric"
+                   pattern="[0-9]*">
+            <div class="error-text" id="id-error"></div>
+            <div class="success-text" id="id-success"></div>
+        </div>
+        
+        <button class="btn-primary" onclick="checkUserId()" id="verify-btn">
+            ПРОВЕРИТЬ
+        </button>
+        
+        <button class="btn-secondary" onclick="prevScreen('register')">
+            НАЗАД
+        </button>
+    </div>
+
+    <!-- ЭКРАН 3: Выбор платформы -->
+    <div id="screen-platform" class="screen">
+        <div class="header">MINES GAME</div>
+        <div class="info-text" id="platform-text">ВЫБЕРИТЕ ПЛАТФОРМУ</div>
+        
+        <div class="choice-container">
+            <button class="choice-btn" onclick="selectPlatform('android')">Android/PC</button>
+            <button class="choice-btn" onclick="selectPlatform('ios')">iOS</button>
+        </div>
+        
+        <button class="btn-secondary" id="platform-back-btn" onclick="prevScreen('id-input')">
+            НАЗАД
+        </button>
+    </div>
+
+    <!-- ЭКРАН 4: Выбор языка -->
+    <div id="screen-language" class="screen">
+        <div class="header">MINES GAME</div>
+        <div class="info-text" id="language-text">ВЫБЕРИТЕ ЯЗЫК</div>
+        
+        <div class="choice-container">
+            <button class="choice-btn" onclick="selectLanguage('rus')">RUS</button>
+            <button class="choice-btn" onclick="selectLanguage('eng')">ENG</button>
+        </div>
+        
+        <button class="btn-secondary" id="language-back-btn" onclick="prevScreen('platform')">
+            НАЗАД
+        </button>
+    </div>
+
+    <!-- ЭКРАН 5: Основной игровой экран -->
+    <div id="screen-game" class="screen">
+        <div class="header">MINES GAME</div>
+        <div class="subheader">MINES</div>
+        
+        <div class="info-text" id="mines-text">КОЛ-ВО ЛОВУШЕК</div>
+        
+        <!-- Игровая сетка -->
+        <div class="grid-container" id="game-grid">
+            <!-- 25 пустых клеток -->
+        </div>
+        
+        <!-- Выбор количества мин -->
+        <div class="mines-selector">
+            <button class="arrow-btn" onclick="changeMines(-1)">←</button>
+            <div class="mines-display" id="mines-value">3</div>
+            <button class="arrow-btn" onclick="changeMines(1)">→</button>
+        </div>
+        
+        <div class="mines-info" id="selected-text">Выбрано: 3 мин</div>
+        
+        <!-- Основная кнопка -->
+        <button class="btn-primary" id="signal-btn" onclick="revealSafeCells()">ПОЛУЧИТЬ СИГНАЛ</button>
+        
+        <!-- Кнопка назад -->
+        <button class="btn-secondary" id="return-btn" onclick="prevScreen('language')">ВЕРНУТЬСЯ</button>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        
+        // Твой ID
+        const ADMIN_ID = '6369347678';
+        
+        // Данные пользователя
+        let userData = {
+            userId: null,
+            platform: null,
+            language: 'rus',
+            mines: 3,
+            safeCells: [],
+            revealedCount: 0,
+            isRevealing: false,
+            isRegistered: false,
+            isAdmin: false
+        };
+        
+        // Соотношение мин и безопасных клеток
+        const safeCellsMap = {
+            1: 7,
+            3: 5,
+            5: 4,
+            7: 3
+        };
+        
+        // Доступные варианты мин
+        const minesOptions = [1, 3, 5, 7];
+        
+        // Переводы
+        const translations = {
+            rus: {
+                registerTitle: "Чтобы начать играть, нужно зарегистрироваться",
+                promoLabel: "При регистрации введите промокод:",
+                promoCode: "2RTYD",
+                promoNote: "Он даст +500% к первому депозиту",
+                registerBtn: "ЗАРЕГИСТРИРОВАТЬСЯ",
+                registerNote: "После регистрации вернитесь сюда и введите ваш ID",
+                alreadyHaveId: "У МЕНЯ УЖЕ ЕСТЬ ID",
+                idTitle: "Введите ID вашего аккаунта",
+                idPlaceholder: "",
+                verifyBtn: "ПРОВЕРИТЬ",
+                back: "НАЗАД",
+                choosePlatform: "ВЫБЕРИТЕ ПЛАТФОРМУ",
+                chooseLanguage: "ВЫБЕРИТЕ ЯЗЫК",
+                minesText: "КОЛ-ВО ЛОВУШЕК",
+                selected: "Выбрано:",
+                mines: "мин",
+                getSignal: "ПОЛУЧИТЬ СИГНАЛ",
+                newSignal: "НОВЫЙ СИГНАЛ",
+                revealing: "РАСКРЫВАЕМ...",
+                return: "ВЕРНУТЬСЯ",
+                notRegistered: "Вы ещё не зарегистрированы! Нажмите кнопку 'ЗАРЕГИСТРИРОВАТЬСЯ' выше.",
+                registrationRequired: "Для продолжения необходима регистрация"
+            },
+            eng: {
+                registerTitle: "To start playing, you need to register first",
+                promoLabel: "When registering, enter promo code:",
+                promoCode: "2RTYD",
+                promoNote: "It will give +500% to the first deposit",
+                registerBtn: "REGISTER",
+                registerNote: "After registration, return here and enter your ID",
+                alreadyHaveId: "I ALREADY HAVE AN ID",
+                idTitle: "Enter your account ID",
+                idPlaceholder: "",
+                verifyBtn: "VERIFY",
+                back: "BACK",
+                choosePlatform: "CHOOSE PLATFORM",
+                chooseLanguage: "CHOOSE LANGUAGE",
+                minesText: "NUMBER OF MINES",
+                selected: "Selected:",
+                mines: "mines",
+                getSignal: "GET SIGNAL",
+                newSignal: "NEW SIGNAL",
+                revealing: "REVEALING...",
+                return: "RETURN",
+                notRegistered: "You are not registered yet! Click 'REGISTER' button above.",
+                registrationRequired: "Registration is required to continue"
+            }
+        };
+        
+        // Проверка, зарегистрирован ли пользователь (из localStorage)
+        function checkRegistrationStatus() {
+            const isRegistered = localStorage.getItem('mines_game_registered') === 'true';
+            const initData = tg.initData || '';
+            
+            // Проверяем, является ли пользователь админом
+            userData.isAdmin = initData.includes(`user=${ADMIN_ID}`) || 
+                              initData.includes(`id=${ADMIN_ID}`) ||
+                              initData.includes(ADMIN_ID);
+            
+            userData.isRegistered = isRegistered || userData.isAdmin;
+            
+            // Показываем/скрываем кнопку "У МЕНЯ УЖЕ ЕСТЬ ID"
+            const haveIdBtn = document.getElementById('have-id-btn');
+            if (haveIdBtn) {
+                haveIdBtn.style.display = userData.isAdmin ? 'block' : 'none';
+            }
+            
+            // Если пользователь уже зарегистрирован и ввел ID ранее, пропускаем на экран выбора платформы
+            if (userData.isRegistered && localStorage.getItem('mines_game_user_id')) {
+                userData.userId = localStorage.getItem('mines_game_user_id');
+                showScreen('platform');
+            }
+        }
+        
+        // Пометить пользователя как зарегистрированного
+        function markUserRegistered() {
+            localStorage.setItem('mines_game_registered', 'true');
+            userData.isRegistered = true;
+            
+            // Показать сообщение о успешной регистрации
+            setTimeout(() => {
+                if (document.getElementById('register-text')) {
+                    const originalText = document.getElementById('register-text').textContent;
+                    document.getElementById('register-text').innerHTML = 
+                        '<span style="color: #00ff00;">✓ Регистрация подтверждена!</span><br>' + 
+                        'Теперь введите ваш ID в поле ниже';
+                    
+                    // Скрыть промокод контейнер
+                    const promoContainer = document.querySelector('.promo-container');
+                    if (promoContainer) {
+                        promoContainer.style.display = 'none';
+                    }
+                }
+            }, 1000);
+        }
+        
+        // Переключение экранов с проверкой регистрации
+        function showScreen(screenId) {
+            // Проверяем регистрацию при попытке перейти к вводу ID
+            if (screenId === 'id-input' && !userData.isRegistered && !userData.isAdmin) {
+                // Показываем сообщение об ошибке
+                if (document.getElementById('register-text')) {
+                    document.getElementById('register-text').innerHTML = 
+                        '<div class="registration-error">' +
+                        translations[userData.language].notRegistered +
+                        '</div>' +
+                        translations[userData.language].registerTitle;
+                }
+                return;
+            }
+            
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById(`screen-${screenId}`).classList.add('active');
+            
+            if (screenId === 'game') {
+                initializeGameGrid();
+                resetRevealState();
+                updateAllTexts();
+            } else if (screenId === 'id-input') {
+                // Очищаем поле ввода при переходе
+                document.getElementById('user-id-input').value = '';
+                document.getElementById('id-error').textContent = '';
+                document.getElementById('id-success').textContent = '';
+                
+                // Фокус на поле ввода
+                setTimeout(() => {
+                    document.getElementById('user-id-input').focus();
+                }, 300);
+            } else {
+                updateAllTexts();
+            }
+        }
+        
+        function nextScreen(screenId) {
+            showScreen(screenId);
+        }
+        
+        function prevScreen(screenId) {
+            showScreen(screenId);
+        }
+        
+        // Проверка ID пользователя
+        function checkUserId() {
+            const input = document.getElementById('user-id-input');
+            const userId = input.value.trim();
+            const errorElement = document.getElementById('id-error');
+            const successElement = document.getElementById('id-success');
+            
+            // Очищаем сообщения
+            errorElement.textContent = '';
+            successElement.textContent = '';
+            
+            // Проверяем что введены только цифры
+            if (!/^\d+$/.test(userId)) {
+                errorElement.textContent = userData.language === 'rus' 
+                    ? 'ID должен содержать только цифры' 
+                    : 'ID must contain only digits';
+                return;
+            }
+            
+            // Проверяем длину (минимум 3 цифры)
+            if (userId.length < 3) {
+                errorElement.textContent = userData.language === 'rus'
+                    ? 'ID должен содержать минимум 3 цифры'
+                    : 'ID must contain at least 3 digits';
+                return;
+            }
+            
+            // Если это админ, проверяем специальный ID
+            if (userData.isAdmin && userId === ADMIN_ID) {
+                successElement.textContent = userData.language === 'rus'
+                    ? '✓ Добро пожаловать, Админ!'
+                    : '✓ Welcome, Admin!';
+                userData.userId = userId;
+                localStorage.setItem('mines_game_user_id', userId);
+                
+                setTimeout(() => {
+                    showScreen('platform');
+                }, 800);
+                return;
+            }
+            
+            // Для обычных пользователей проверяем регистрацию
+            if (!userData.isRegistered) {
+                errorElement.textContent = translations[userData.language].registrationRequired;
+                return;
+            }
+            
+            // ID валиден
+            userData.userId = userId;
+            successElement.textContent = userData.language === 'rus'
+                ? '✓ ID успешно проверен'
+                : '✓ ID successfully verified';
+            
+            // Сохраняем ID в localStorage
+            localStorage.setItem('mines_game_user_id', userId);
+            
+            // Переход к выбору платформы через 1 секунду
+            setTimeout(() => {
+                showScreen('platform');
+            }, 1000);
+        }
+        
+        // Выбор платформы
+        function selectPlatform(platform) {
+            userData.platform = platform;
+            document.querySelectorAll('#screen-platform .choice-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            event.target.classList.add('selected');
+            
+            setTimeout(() => {
+                showScreen('language');
+            }, 1000);
+        }
+        
+        // Выбор языка
+        function selectLanguage(lang) {
+            userData.language = lang;
+            document.querySelectorAll('#screen-language .choice-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            event.target.classList.add('selected');
+            
+            // НЕМЕДЛЕННО обновляем тексты на текущем экране
+            updateAllTexts();
+            
+            setTimeout(() => {
+                showScreen('game');
+            }, 1000);
+        }
+        
+        // Изменение количества мин
+        function changeMines(delta) {
+            let currentIndex = minesOptions.indexOf(userData.mines);
+            currentIndex += delta;
+            
+            if (currentIndex < 0) currentIndex = minesOptions.length - 1;
+            if (currentIndex >= minesOptions.length) currentIndex = 0;
+            
+            userData.mines = minesOptions[currentIndex];
+            document.getElementById('mines-value').textContent = userData.mines;
+            
+            updateSelectedText();
+        }
+        
+        // Обновление всех текстов
+        function updateAllTexts() {
+            const lang = userData.language;
+            const t = translations[lang];
+            
+            // Обновляем все тексты на всех экранах
+            if (document.getElementById('register-text')) {
+                const registerText = document.getElementById('register-text');
+                if (!registerText.innerHTML.includes('registration-error') && 
+                    !registerText.innerHTML.includes('✓ Регистрация')) {
+                    registerText.textContent = t.registerTitle;
+                }
+            }
+            if (document.getElementById('promo-label')) {
+                document.getElementById('promo-label').textContent = t.promoLabel;
+            }
+            if (document.getElementById('promo-code')) {
+                document.getElementById('promo-code').textContent = t.promoCode;
+            }
+            if (document.getElementById('promo-note')) {
+                document.getElementById('promo-note').textContent = t.promoNote;
+            }
+            if (document.getElementById('register-btn')) {
+                document.getElementById('register-btn').textContent = t.registerBtn;
+            }
+            if (document.getElementById('register-note')) {
+                document.getElementById('register-note').textContent = t.registerNote;
+            }
+            if (document.getElementById('have-id-btn')) {
+                document.getElementById('have-id-btn').textContent = t.alreadyHaveId;
+            }
+            if (document.getElementById('id-text')) {
+                document.getElementById('id-text').textContent = t.idTitle;
+            }
+            if (document.getElementById('user-id-input')) {
+                document.getElementById('user-id-input').placeholder = t.idPlaceholder;
+            }
+            if (document.getElementById('verify-btn')) {
+                document.getElementById('verify-btn').textContent = t.verifyBtn;
+            }
+            if (document.querySelectorAll('.btn-secondary')) {
+                document.querySelectorAll('.btn-secondary').forEach(btn => {
+                    if (btn.id.includes('back') || btn.textContent.includes('BACK') || btn.textContent.includes('НАЗАД')) {
+                        btn.textContent = t.back;
+                    }
+                });
+            }
+            if (document.getElementById('platform-text')) {
+                document.getElementById('platform-text').textContent = t.choosePlatform;
+            }
+            if (document.getElementById('language-text')) {
+                document.getElementById('language-text').textContent = t.chooseLanguage;
+            }
+            if (document.getElementById('mines-text')) {
+                document.getElementById('mines-text').textContent = t.minesText;
+            }
+            if (document.getElementById('return-btn')) {
+                document.getElementById('return-btn').textContent = t.return;
+            }
+            
+            updateSelectedText();
+            
+            const signalBtn = document.getElementById('signal-btn');
+            if (signalBtn) {
+                if (!userData.isRevealing && userData.revealedCount === 0) {
+                    signalBtn.textContent = t.getSignal;
+                    signalBtn.disabled = false;
+                } else if (userData.revealedCount > 0) {
+                    signalBtn.textContent = t.newSignal;
+                }
+            }
+        }
+        
+        // Обновление текста о минах
+        function updateSelectedText() {
+            const t = translations[userData.language];
+            if (document.getElementById('selected-text')) {
+                document.getElementById('selected-text').textContent = 
+                    `${t.selected} ${userData.mines} ${t.mines}`;
+            }
+        }
+        
+        // Инициализация игровой сетки
+        function initializeGameGrid() {
+            const grid = document.getElementById('game-grid');
+            grid.innerHTML = '';
+            
+            for (let i = 0; i < 25; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.dataset.index = i;
+                grid.appendChild(cell);
+            }
+        }
+        
+        // Генерация случайных безопасных клеток
+        function generateSafeCells() {
+            const totalCells = 25;
+            const safeCount = safeCellsMap[userData.mines];
+            userData.safeCells = [];
+            
+            while (userData.safeCells.length < safeCount) {
+                const randomCell = Math.floor(Math.random() * totalCells);
+                if (!userData.safeCells.includes(randomCell)) {
+                    userData.safeCells.push(randomCell);
+                }
+            }
+            
+            userData.safeCells.sort((a, b) => a - b);
+            return userData.safeCells;
+        }
+        
+        // Сброс состояния раскрытия
+        function resetRevealState() {
+            userData.revealedCount = 0;
+            userData.isRevealing = false;
+            userData.safeCells = [];
+            
+            const signalBtn = document.getElementById('signal-btn');
+            signalBtn.disabled = false;
+            signalBtn.textContent = translations[userData.language].getSignal;
+            signalBtn.onclick = revealSafeCells;
+            
+            document.querySelectorAll('.cell').forEach(cell => {
+                cell.classList.remove('safe');
+                cell.innerHTML = '';
+            });
+        }
+        
+        // Постепенное раскрытие безопасных клеток
+        async function revealSafeCells() {
+            if (userData.isRevealing) return;
+            
+            userData.isRevealing = true;
+            const btn = document.getElementById('signal-btn');
+            const t = translations[userData.language];
+            
+            btn.disabled = true;
+            btn.textContent = t.revealing;
+            
+            generateSafeCells();
+            const safeCells = userData.safeCells;
+            
+            for (let i = 0; i < safeCells.length; i++) {
+                const cellIndex = safeCells[i];
+                const cell = document.querySelector(`.cell[data-index="${cellIndex}"]`);
+                
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                cell.classList.add('safe');
+                cell.innerHTML = '⭐';
+                
+                userData.revealedCount++;
+                
+                if (tg.HapticFeedback) {
+                    tg.HapticFeedback.impactOccurred('light');
+                }
+            }
+            
+            userData.isRevealing = false;
+            btn.disabled = false;
+            btn.textContent = t.newSignal;
+            btn.onclick = generateNewSignal;
+        }
+        
+        // Генерация нового сигнала
+        function generateNewSignal() {
+            initializeGameGrid();
+            resetRevealState();
+            updateAllTexts();
+            
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('medium');
+            }
+        }
+        
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('mines-value').textContent = userData.mines;
+            
+            // Проверяем статус регистрации и админские права
+            checkRegistrationStatus();
+            
+            // ОБНОВЛЯЕМ ТЕКСТЫ СРАЗУ ПРИ ЗАГРУЗКЕ
+            updateAllTexts();
+            
+            initializeGameGrid();
+            
+            // Автофокус на поле ввода ID при переходе
+            document.getElementById('user-id-input')?.addEventListener('focus', function() {
+                this.select();
+            });
+            
+            tg.ready();
+        });
+    </script>
+</body>
+          </html>
